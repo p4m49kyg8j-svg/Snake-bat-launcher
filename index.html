@@ -2,114 +2,268 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <title>Snake: Bat Launcher</title>
 <style>
-html,body{margin:0;background:#090b10;color:#fff;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;height:100%;overflow:hidden}
-body{display:flex;justify-content:center;align-items:center}
-#app{width:min(94vw,700px);height:100%;display:flex;flex-direction:column;justify-content:center;gap:10px;padding:12px;box-sizing:border-box}
-h1{margin:0;font-size:clamp(25px,7vw,42px)} .sub{color:#9ca3af;font-size:14px}
-#hud{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
-.pill,button{background:#181c25;border:1px solid #303746;color:#fff;border-radius:11px;padding:9px 12px;font-weight:700}
-button{cursor:pointer}.grow{flex:1}
-canvas{width:100%;aspect-ratio:1;background:#0d1118;border:1px solid #343b48;border-radius:18px;box-shadow:0 20px 70px #000b;touch-action:none}
-#pad{display:grid;grid-template-columns:repeat(3,64px);gap:7px;justify-content:center}
-#pad button{height:52px;font-size:22px;padding:0}.blank{visibility:hidden}
-#hint{text-align:center;color:#8b93a3;font-size:12px}
-#modal{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;padding:20px}
-.card{background:#171b23;border:1px solid #394151;border-radius:20px;padding:26px;max-width:360px;width:100%;text-align:center;box-shadow:0 30px 100px #000}
-.card h2{font-size:32px;margin:0 0 8px}.card p{color:#aeb5c2}.card button{width:100%;font-size:17px}
+html,body{
+ margin:0;background:#090b10;color:white;
+ font-family:system-ui,sans-serif;
+ height:100%;overflow:hidden;
+}
+body{
+ display:flex;justify-content:center;align-items:center;
+}
+#app{
+ width:min(94vw,700px);text-align:center;
+}
+h1{margin:0 0 8px;font-size:clamp(25px,7vw,42px)}
+#hud{
+ display:flex;justify-content:center;gap:12px;
+ margin-bottom:8px;flex-wrap:wrap;
+}
+.pill{
+ background:#181c25;border:1px solid #303746;
+ border-radius:999px;padding:7px 13px;
+}
+canvas{
+ width:100%;aspect-ratio:1;
+ background:#10151d;border:2px solid #303746;
+ border-radius:16px;touch-action:none;
+}
+#pad{
+ display:grid;grid-template-columns:repeat(3,1fr);
+ gap:7px;margin:10px auto;max-width:330px;
+}
+button{
+ height:52px;font-size:22px;border:0;
+ border-radius:12px;background:#181c25;color:white;
+}
+#hint{color:#8b93a3;font-size:13px}
+#modal{
+ position:fixed;inset:0;background:#000b;
+ display:none;align-items:center;justify-content:center;
+}
+.box{
+ background:#151a23;padding:28px;border-radius:20px;
+ text-align:center;border:1px solid #343b48;
+}
+.box button{padding:0 25px}
 </style>
 </head>
 <body>
 <div id="app">
 <h1>🐍 Snake: Bat Launcher</h1>
-<div class="sub">Snake, except you can launch bats. Obviously.</div>
+
 <div id="hud">
-<div class="pill">Score <span id="score">0</span></div>
-<div class="pill">High <span id="high">0</span></div>
-<div class="pill">🦇 <span id="ammo">3</span></div>
-<button id="pause">Pause</button><button id="restart">Restart</button><span class="grow"></span>
+ <div class="pill">Score: <b id="score">0</b></div>
+ <div class="pill">🦇 Bats: <b id="ammo">3</b></div>
+ <div class="pill">Best: <b id="best">0</b></div>
 </div>
+
 <canvas id="game" width="600" height="600"></canvas>
+
 <div id="pad">
-<button class="blank"></button><button data-d="U">▲</button><button class="blank"></button>
-<button data-d="L">◀</button><button data-d="D">▼</button><button data-d="R">▶</button>
+ <div></div><button onclick="turn(0,-1)">▲</button><div></div>
+ <button onclick="turn(-1,0)">◀</button>
+ <button onclick="pause()">⏸</button>
+ <button onclick="turn(1,0)">▶</button>
+ <div></div><button onclick="turn(0,1)">▼</button><div></div>
 </div>
-<div id="hint">WASD / arrows to move • SPACE to launch a bat • P to pause</div>
+
+<div id="hint">
+ Slow mode • Tap the screen twice to launch a bat
 </div>
-<div id="modal"><div class="card"><h2>💥 Game Over</h2><p id="reason"></p><button id="again">Play Again</button></div></div>
+</div>
+
+<div id="modal">
+ <div class="box">
+  <h2 id="message">Game Over</h2>
+  <p>Score: <b id="final">0</b></p>
+  <button onclick="restart()">Play Again</button>
+ </div>
+</div>
+
 <script>
-(()=>{
-const c=document.getElementById('game'),x=c.getContext('2d'),S=24,C=25;
-const scoreEl=document.getElementById('score'),highEl=document.getElementById('high'),ammoEl=document.getElementById('ammo');
-let hi=+(localStorage.snakeBatHigh||0),snake,dir,next,food,enemies,bats,ammo,score,running,paused,last=0,acc=0;
-highEl.textContent=hi;
-const rnd=()=>({x:Math.floor(Math.random()*S),y:Math.floor(Math.random()*S)});
-const same=(a,b)=>a.x===b.x&&a.y===b.y;
-function free(p){return !snake.some(q=>same(q,p))&&!enemies.some(q=>same(q,p))&&!same(food||{x:-1,y:-1},p)}
-function newFood(){let p;do p=rnd();while(!free(p));return p}
-function enemy(){let p;do p=rnd();while(!free(p)||Math.abs(p.x-snake[0].x)+Math.abs(p.y-snake[0].y)<9);return{x:p.x,y:p.y,dx:0,dy:1,t:0}}
-function reset(){
- snake=[{x:12,y:12},{x:11,y:12},{x:10,y:12}];dir={x:1,y:0};next={x:1,y:0};
- food=null;enemies=[];bats=[];ammo=3;score=0;running=true;paused=false;acc=0;last=performance.now();
- food=newFood();enemies.push(enemy());modal.style.display='none';ui();requestAnimationFrame(loop)
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+
+const N=20;
+const CELL=30;
+
+let snake;
+let dir;
+let nextDir;
+let food;
+let bats;
+let score;
+let ammo;
+let running;
+let last=0;
+
+let best=Number(localStorage.getItem("snakeBest")||0);
+document.getElementById("best").textContent=best;
+
+function restart(){
+ snake=[
+  {x:10,y:10},
+  {x:9,y:10},
+  {x:8,y:10}
+ ];
+ dir={x:1,y:0};
+ nextDir={x:1,y:0};
+ bats=[];
+ score=0;
+ ammo=3;
+ running=true;
+ document.getElementById("modal").style.display="none";
+ food=newFood();
+ updateHUD();
 }
-function ui(){scoreEl.textContent=score;ammoEl.textContent=ammo;if(score>hi){hi=score;localStorage.snakeBatHigh=hi;highEl.textContent=hi}}
-function turn(d){
- let q={U:{x:0,y:-1},D:{x:0,y:1},L:{x:-1,y:0},R:{x:1,y:0}}[d];
- if(q&&!(q.x===-dir.x&&q.y===-dir.y))next=q
+
+function newFood(){
+ let f;
+ do{
+  f={
+   x:Math.floor(Math.random()*N),
+   y:Math.floor(Math.random()*N)
+  };
+ }while(snake.some(p=>p.x===f.x&&p.y===f.y));
+ return f;
 }
-function fire(){
- if(!running||paused||ammo<1)return;
- ammo--;bats.push({x:snake[0].x,y:snake[0].y,dx:dir.x,dy:dir.y,life:18});ui()
+
+function turn(x,y){
+ if(x===-dir.x&&y===-dir.y)return;
+ nextDir={x,y};
 }
-function step(){
- dir=next;let h={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
- if(h.x<0||h.x>=S||h.y<0||h.y>=S||snake.some(q=>same(q,h)))return gameover("You crashed into yourself or the wall.");
- snake.unshift(h);
- if(same(h,food)){score+=10;ammo++;food=newFood();if(score%50===0&&enemies.length<5)enemies.push(enemy())}else snake.pop();
- for(const e of enemies){
-   e.t--;if(e.t<=0){
-    let dx=h.x-e.x,dy=h.y-e.y;
-    if(Math.abs(dx)>Math.abs(dy)){e.dx=Math.sign(dx);e.dy=0}else{e.dy=Math.sign(dy);e.dx=0}
-    e.t=2+Math.floor(Math.random()*4)
-   }
-   let nx=e.x+e.dx,ny=e.y+e.dy;
-   if(nx>=0&&nx<S)e.x=nx;if(ny>=0&&ny<S)e.y=ny;
+
+function pause(){
+ if(!running)return;
+ running=false;
+ document.getElementById("message").textContent="Paused";
+ document.getElementById("final").textContent=score;
+ document.getElementById("modal").style.display="flex";
+}
+
+function gameOver(){
+ running=false;
+ if(score>best){
+  best=score;
+  localStorage.setItem("snakeBest",best);
  }
- if(enemies.some(e=>same(e,snake[0])))return gameover("The enemy caught you.");
- for(let i=bats.length-1;i>=0;i--){
-   let b=bats[i];b.x+=b.dx;b.y+=b.dy;b.life--;
-   if(b.x<0||b.x>=S||b.y<0||b.y>=S||b.life<=0){bats.splice(i,1);continue}
-   let hit=enemies.findIndex(e=>same(e,b));
-   if(hit>=0){enemies.splice(hit,1);bats.splice(i,1);score+=25;ammo++;if(!enemies.length)enemies.push(enemy())}
- }
- ui()
+ document.getElementById("message").textContent="Game Over";
+ document.getElementById("final").textContent=score;
+ document.getElementById("modal").style.display="flex";
+ updateHUD();
 }
-function gameover(s){running=false;reason.textContent=s+" Final score: "+score;modal.style.display='flex'}
-function rr(px,py,w,h,r){x.beginPath();x.roundRect(px,py,w,h,r);x.fill()}
-function draw(){
- x.clearRect(0,0,600,600);x.fillStyle='#0b0f16';x.fillRect(0,0,600,600);
- x.strokeStyle='#151b25';x.lineWidth=1;
- for(let i=1;i<S;i++){x.beginPath();x.moveTo(i*C,0);x.lineTo(i*C,600);x.stroke();x.beginPath();x.moveTo(0,i*C);x.lineTo(600,i*C);x.stroke()}
- x.fillStyle='#67e8f9';x.beginPath();x.arc(food.x*C+12.5,food.y*C+12.5,7,0,7);x.fill();
- for(const e of enemies){x.fillStyle='#f59e0b';rr(e.x*C+4,e.y*C+4,17,17,5);x.fillStyle='#111';x.beginPath();x.arc(e.x*C+9,e.y*C+9,2,0,7);x.arc(e.x*C+16,e.y*C+9,2,0,7);x.fill()}
- for(const b of bats){x.save();x.translate(b.x*C+12.5,b.y*C+12.5);x.rotate(Math.atan2(b.dy,b.dx));x.fillStyle='#c58b55';x.fillRect(-8,-2,14,4);x.fillStyle='#eee';x.fillRect(4,-6,7,12);x.restore()}
- snake.forEach((q,i)=>{x.fillStyle=i?'#34d399':'#a7f3d0';rr(q.x*C+2,q.y*C+2,21,21,6)});
- let h=snake[0],cx=h.x*C+12.5,cy=h.y*C+12.5;x.fillStyle='#07130d';
- let ex=dir.x*4,ey=dir.y*4,px=-dir.y*4,py=dir.x*4;
- x.beginPath();x.arc(cx+ex+px,cy+ey+py,2.2,0,7);x.arc(cx+ex-px,cy+ey-py,2.2,0,7);x.fill();
- if(paused&&running){x.fillStyle='#0009';x.fillRect(0,0,600,600);x.fillStyle='#fff';x.font='bold 42px system-ui';x.textAlign='center';x.fillText('PAUSED',300,315)}
+
+function launchBat(){
+ if(!running||ammo<=0)return;
+ ammo--;
+ bats.push({
+  x:snake[0].x,
+  y:snake[0].y,
+  dx:dir.x,
+  dy:dir.y,
+  life:20
+ });
+ updateHUD();
 }
-function loop(t){if(!running)return;if(!paused){acc+=t-last;while(acc>=105){step();acc-=105}}last=t;draw();requestAnimationFrame(loop)}
-document.addEventListener('keydown',e=>{
- let k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' ','w','a','s','d','p'].includes(k))e.preventDefault();
- if(k==='w'||k==='arrowup')turn('U');if(k==='s'||k==='arrowdown')turn('D');if(k==='a'||k==='arrowleft')turn('L');if(k==='d'||k==='arrowright')turn('R');if(k===' ')fire();if(k==='p'){paused=!paused;draw()}
+
+canvas.addEventListener("touchend",e=>{
+ if(e.detail===2)launchBat();
 });
-document.querySelectorAll('#pad button[data-d]').forEach(b=>{b.addEventListener('pointerdown',e=>{e.preventDefault();turn(b.dataset.d)})});
-pause.onclick=()=>{paused=!paused;draw()};restart.onclick=reset;again.onclick=reset;reset();
-})();
+
+document.addEventListener("keydown",e=>{
+ if(e.key==="ArrowUp"||e.key==="w")turn(0,-1);
+ if(e.key==="ArrowDown"||e.key==="s")turn(0,1);
+ if(e.key==="ArrowLeft"||e.key==="a")turn(-1,0);
+ if(e.key==="ArrowRight"||e.key==="d")turn(1,0);
+ if(e.key===" ")launchBat();
+ if(e.key==="p")pause();
+});
+
+function update(){
+ if(!running)return;
+
+ dir=nextDir;
+
+ const head={
+  x:snake[0].x+dir.x,
+  y:snake[0].y+dir.y
+ };
+
+ if(
+  head.x<0||head.x>=N||
+  head.y<0||head.y>=N||
+  snake.some(p=>p.x===head.x&&p.y===head.y)
+ ){
+  gameOver();
+  return;
+ }
+
+ snake.unshift(head);
+
+ if(head.x===food.x&&head.y===food.y){
+  score+=10;
+  ammo++;
+  food=newFood();
+ }else{
+  snake.pop();
+ }
+
+ for(let i=bats.length-1;i>=0;i--){
+  let b=bats[i];
+  b.x+=b.dx;
+  b.y+=b.dy;
+  b.life--;
+
+  if(
+   b.x<0||b.x>=N||
+   b.y<0||b.y>=N||
+   b.life<=0
+  ){
+   bats.splice(i,1);
+  }
+ }
+
+ updateHUD();
+}
+
+function updateHUD(){
+ document.getElementById("score").textContent=score;
+ document.getElementById("ammo").textContent=ammo;
+ document.getElementById("best").textContent=best;
+}
+
+function draw(){
+ ctx.fillStyle="#10151d";
+ ctx.fillRect(0,0,600,600);
+
+ ctx.fillStyle="#67e8f9";
+ ctx.fillRect(food.x*CELL+7,food.y*CELL+7,16,16);
+
+ snake.forEach((p,i)=>{
+  ctx.fillStyle=i===0?"#a7f3d0":"#34d399";
+  ctx.fillRect(p.x*CELL+2,p.y*CELL+2,26,26);
+ });
+
+ ctx.fillStyle="#f59e0b";
+ bats.forEach(b=>{
+  ctx.fillRect(b.x*CELL+5,b.y*CELL+11,20,8);
+ });
+}
+
+function loop(t){
+ if(t-last>=180){
+  last=t;
+  update();
+  draw();
+ }
+ requestAnimationFrame(loop);
+}
+
+restart();
+requestAnimationFrame(loop);
 </script>
 </body>
 </html>
