@@ -4,266 +4,725 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <title>Snake: Bat Launcher</title>
+
 <style>
 html,body{
- margin:0;background:#090b10;color:white;
- font-family:system-ui,sans-serif;
- height:100%;overflow:hidden;
+  margin:0;
+  background:#090b10;
+  color:white;
+  font-family:system-ui,sans-serif;
+  height:100%;
+  overflow:hidden;
 }
+
 body{
- display:flex;justify-content:center;align-items:center;
+  display:flex;
+  justify-content:center;
+  align-items:center;
 }
+
 #app{
- width:min(94vw,700px);text-align:center;
+  width:min(94vw,700px);
+  text-align:center;
 }
-h1{margin:0 0 8px;font-size:clamp(25px,7vw,42px)}
+
+h1{
+  margin:0 0 8px;
+  font-size:clamp(25px,7vw,42px);
+}
+
 #hud{
- display:flex;justify-content:center;gap:12px;
- margin-bottom:8px;flex-wrap:wrap;
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  margin-bottom:8px;
+  flex-wrap:wrap;
 }
+
 .pill{
- background:#181c25;border:1px solid #303746;
- border-radius:999px;padding:7px 13px;
+  background:#181c25;
+  border:1px solid #303746;
+  border-radius:999px;
+  padding:7px 13px;
 }
+
 canvas{
- width:100%;aspect-ratio:1;
- background:#10151d;border:2px solid #303746;
- border-radius:16px;touch-action:none;
+  width:100%;
+  aspect-ratio:1;
+  background:#10151d;
+  border:2px solid #303746;
+  border-radius:16px;
+  touch-action:none;
 }
+
 #pad{
- display:grid;grid-template-columns:repeat(3,1fr);
- gap:7px;margin:10px auto;max-width:330px;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px;
+  margin:10px auto;
+  max-width:330px;
 }
+
 button{
- height:52px;font-size:22px;border:0;
- border-radius:12px;background:#181c25;color:white;
+  height:52px;
+  font-size:22px;
+  border:0;
+  border-radius:12px;
+  background:#181c25;
+  color:white;
+  transition:transform .06s,background .06s;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
 }
-#hint{color:#8b93a3;font-size:13px}
+
+button:active{
+  transform:scale(.94);
+  background:#252c39;
+}
+
+#hint{
+  color:#8b93a3;
+  font-size:13px;
+}
+
 #modal{
- position:fixed;inset:0;background:#000b;
- display:none;align-items:center;justify-content:center;
+  position:fixed;
+  inset:0;
+  background:#000b;
+  display:none;
+  align-items:center;
+  justify-content:center;
 }
+
 .box{
- background:#151a23;padding:28px;border-radius:20px;
- text-align:center;border:1px solid #343b48;
+  background:#151a23;
+  padding:28px;
+  border-radius:20px;
+  text-align:center;
+  border:1px solid #343b48;
 }
-.box button{padding:0 25px}
+
+.box button{
+  padding:0 25px;
+}
 </style>
 </head>
+
 <body>
+
 <div id="app">
+
 <h1>🐍 Snake: Bat Launcher</h1>
 
 <div id="hud">
- <div class="pill">Score: <b id="score">0</b></div>
- <div class="pill">🦇 Bats: <b id="ammo">3</b></div>
- <div class="pill">Best: <b id="best">0</b></div>
+  <div class="pill">
+    Score: <b id="score">0</b>
+  </div>
+
+  <div class="pill">
+    🦇 Bats: <b id="ammo">3</b>
+  </div>
+
+  <div class="pill">
+    Best: <b id="best">0</b>
+  </div>
 </div>
 
 <canvas id="game" width="600" height="600"></canvas>
 
 <div id="pad">
- <div></div><button onclick="turn(0,-1)">▲</button><div></div>
- <button onclick="turn(-1,0)">◀</button>
- <button onclick="pause()">⏸</button>
- <button onclick="turn(1,0)">▶</button>
- <div></div><button onclick="turn(0,1)">▼</button><div></div>
+
+  <div></div>
+  <button onclick="turn(0,-1)">▲</button>
+  <div></div>
+
+  <button onclick="turn(-1,0)">◀</button>
+
+  <button onclick="pause()">⏸</button>
+
+  <button onclick="turn(1,0)">▶</button>
+
+  <div></div>
+  <button onclick="turn(0,1)">▼</button>
+  <div></div>
+
 </div>
 
 <div id="hint">
- Slow mode • Tap the screen twice to launch a bat
+  Slow mode • Tap the screen twice to launch a bat
 </div>
+
 </div>
 
 <div id="modal">
- <div class="box">
-  <h2 id="message">Game Over</h2>
-  <p>Score: <b id="final">0</b></p>
-  <button onclick="restart()">Play Again</button>
- </div>
+
+  <div class="box">
+
+    <h2 id="message">Game Over</h2>
+
+    <p>
+      Score: <b id="final">0</b>
+    </p>
+
+    <button onclick="restart()">
+      Play Again
+    </button>
+
+  </div>
+
 </div>
 
 <script>
-const canvas=document.getElementById("game");
-const ctx=canvas.getContext("2d");
 
-const N=20;
-const CELL=30;
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const N = 20;
+const CELL = 30;
 
 let snake;
 let dir;
-let nextDir;
+let inputQueue = [];
 let food;
 let bats;
 let score;
 let ammo;
 let running;
-let last=0;
+let last = 0;
 
-let best=Number(localStorage.getItem("snakeBest")||0);
-document.getElementById("best").textContent=best;
+let best = Number(
+  localStorage.getItem("snakeBest") || 0
+);
+
+document.getElementById("best").textContent = best;
+
+
+/* -------------------------
+   START / RESTART
+------------------------- */
 
 function restart(){
- snake=[
-  {x:10,y:10},
-  {x:9,y:10},
-  {x:8,y:10}
- ];
- dir={x:1,y:0};
- nextDir={x:1,y:0};
- bats=[];
- score=0;
- ammo=3;
- running=true;
- document.getElementById("modal").style.display="none";
- food=newFood();
- updateHUD();
+
+  snake = [
+    {x:10,y:10},
+    {x:9,y:10},
+    {x:8,y:10}
+  ];
+
+  dir = {
+    x:1,
+    y:0
+  };
+
+  inputQueue = [];
+  bats = [];
+
+  score = 0;
+  ammo = 3;
+  running = true;
+
+  document.getElementById("modal").style.display = "none";
+
+  food = newFood();
+
+  updateHUD();
 }
+
+
+/* -------------------------
+   FOOD
+------------------------- */
 
 function newFood(){
- let f;
- do{
-  f={
-   x:Math.floor(Math.random()*N),
-   y:Math.floor(Math.random()*N)
-  };
- }while(snake.some(p=>p.x===f.x&&p.y===f.y));
- return f;
+
+  let f;
+
+  do{
+
+    f = {
+      x:Math.floor(Math.random()*N),
+      y:Math.floor(Math.random()*N)
+    };
+
+  }while(
+    snake.some(
+      p => p.x === f.x && p.y === f.y
+    )
+  );
+
+  return f;
 }
+
+
+/* -------------------------
+   HAPTICS
+------------------------- */
+
+function haptic(){
+
+  if(navigator.vibrate){
+    navigator.vibrate(8);
+  }
+
+}
+
+
+/* -------------------------
+   DIRECTION CONTROL
+------------------------- */
 
 function turn(x,y){
- if(x===-dir.x&&y===-dir.y)return;
- nextDir={x,y};
-}
 
-function pause(){
- if(!running)return;
- running=false;
- document.getElementById("message").textContent="Paused";
- document.getElementById("final").textContent=score;
- document.getElementById("modal").style.display="flex";
-}
+  /*
+    Look at the last queued direction rather
+    than only the current direction.
 
-function gameOver(){
- running=false;
- if(score>best){
-  best=score;
-  localStorage.setItem("snakeBest",best);
- }
- document.getElementById("message").textContent="Game Over";
- document.getElementById("final").textContent=score;
- document.getElementById("modal").style.display="flex";
- updateHUD();
-}
+    This lets the player rapidly enter:
+    UP → RIGHT
+    or
+    RIGHT → DOWN
 
-function launchBat(){
- if(!running||ammo<=0)return;
- ammo--;
- bats.push({
-  x:snake[0].x,
-  y:snake[0].y,
-  dx:dir.x,
-  dy:dir.y,
-  life:20
- });
- updateHUD();
-}
+    without the second input being lost.
+  */
 
-canvas.addEventListener("touchend",e=>{
- if(e.detail===2)launchBat();
-});
+  const lastDir =
+    inputQueue.length
+      ? inputQueue[inputQueue.length - 1]
+      : dir;
 
-document.addEventListener("keydown",e=>{
- if(e.key==="ArrowUp"||e.key==="w")turn(0,-1);
- if(e.key==="ArrowDown"||e.key==="s")turn(0,1);
- if(e.key==="ArrowLeft"||e.key==="a")turn(-1,0);
- if(e.key==="ArrowRight"||e.key==="d")turn(1,0);
- if(e.key===" ")launchBat();
- if(e.key==="p")pause();
-});
-
-function update(){
- if(!running)return;
-
- dir=nextDir;
-
- const head={
-  x:snake[0].x+dir.x,
-  y:snake[0].y+dir.y
- };
-
- if(
-  head.x<0||head.x>=N||
-  head.y<0||head.y>=N||
-  snake.some(p=>p.x===head.x&&p.y===head.y)
- ){
-  gameOver();
-  return;
- }
-
- snake.unshift(head);
-
- if(head.x===food.x&&head.y===food.y){
-  score+=10;
-  ammo++;
-  food=newFood();
- }else{
-  snake.pop();
- }
-
- for(let i=bats.length-1;i>=0;i--){
-  let b=bats[i];
-  b.x+=b.dx;
-  b.y+=b.dy;
-  b.life--;
+  /*
+    Don't allow an immediate 180° reversal.
+  */
 
   if(
-   b.x<0||b.x>=N||
-   b.y<0||b.y>=N||
-   b.life<=0
+    x === -lastDir.x &&
+    y === -lastDir.y
   ){
-   bats.splice(i,1);
+    return;
   }
- }
 
- updateHUD();
+  /*
+    Don't queue the exact same direction twice.
+  */
+
+  if(
+    x === lastDir.x &&
+    y === lastDir.y
+  ){
+    return;
+  }
+
+  /*
+    Allow up to three rapid inputs.
+  */
+
+  if(inputQueue.length < 3){
+
+    inputQueue.push({
+      x:x,
+      y:y
+    });
+
+    haptic();
+  }
+
 }
+
+
+/* -------------------------
+   PAUSE
+------------------------- */
+
+function pause(){
+
+  if(!running){
+    return;
+  }
+
+  haptic();
+
+  running = false;
+
+  document.getElementById("message")
+    .textContent = "Paused";
+
+  document.getElementById("final")
+    .textContent = score;
+
+  document.getElementById("modal")
+    .style.display = "flex";
+}
+
+
+/* -------------------------
+   GAME OVER
+------------------------- */
+
+function gameOver(){
+
+  running = false;
+
+  if(score > best){
+
+    best = score;
+
+    localStorage.setItem(
+      "snakeBest",
+      best
+    );
+  }
+
+  document.getElementById("message")
+    .textContent = "Game Over";
+
+  document.getElementById("final")
+    .textContent = score;
+
+  document.getElementById("modal")
+    .style.display = "flex";
+
+  updateHUD();
+}
+
+
+/* -------------------------
+   BAT LAUNCHER
+------------------------- */
+
+function launchBat(){
+
+  if(!running || ammo <= 0){
+    return;
+  }
+
+  ammo--;
+
+  haptic();
+
+  bats.push({
+
+    x:snake[0].x,
+    y:snake[0].y,
+
+    dx:dir.x,
+    dy:dir.y,
+
+    life:20
+
+  });
+
+  updateHUD();
+}
+
+
+/* -------------------------
+   DOUBLE TAP
+------------------------- */
+
+canvas.addEventListener(
+  "touchend",
+  e => {
+
+    if(e.detail === 2){
+      launchBat();
+    }
+
+  }
+);
+
+
+/* -------------------------
+   KEYBOARD
+------------------------- */
+
+document.addEventListener(
+  "keydown",
+  e => {
+
+    if(
+      e.key === "ArrowUp" ||
+      e.key === "w"
+    ){
+      turn(0,-1);
+    }
+
+    if(
+      e.key === "ArrowDown" ||
+      e.key === "s"
+    ){
+      turn(0,1);
+    }
+
+    if(
+      e.key === "ArrowLeft" ||
+      e.key === "a"
+    ){
+      turn(-1,0);
+    }
+
+    if(
+      e.key === "ArrowRight" ||
+      e.key === "d"
+    ){
+      turn(1,0);
+    }
+
+    if(e.key === " "){
+      launchBat();
+    }
+
+    if(e.key === "p"){
+      pause();
+    }
+
+  }
+);
+
+
+/* -------------------------
+   GAME UPDATE
+------------------------- */
+
+function update(){
+
+  if(!running){
+    return;
+  }
+
+  /*
+    Process ONE queued direction per
+    game tick.
+
+    This is what makes rapid turns reliable.
+  */
+
+  if(inputQueue.length){
+    dir = inputQueue.shift();
+  }
+
+  const head = {
+
+    x:snake[0].x + dir.x,
+    y:snake[0].y + dir.y
+
+  };
+
+
+  /*
+    Wall collision
+  */
+
+  if(
+    head.x < 0 ||
+    head.x >= N ||
+    head.y < 0 ||
+    head.y >= N ||
+    snake.some(
+      p =>
+        p.x === head.x &&
+        p.y === head.y
+    )
+  ){
+
+    gameOver();
+    return;
+
+  }
+
+
+  snake.unshift(head);
+
+
+  /*
+    Food
+  */
+
+  if(
+    head.x === food.x &&
+    head.y === food.y
+  ){
+
+    score += 10;
+
+    ammo++;
+
+    food = newFood();
+
+  }else{
+
+    snake.pop();
+
+  }
+
+
+  /*
+    Move bats
+  */
+
+  for(
+    let i = bats.length - 1;
+    i >= 0;
+    i--
+  ){
+
+    let b = bats[i];
+
+    b.x += b.dx;
+    b.y += b.dy;
+
+    b.life--;
+
+    if(
+      b.x < 0 ||
+      b.x >= N ||
+      b.y < 0 ||
+      b.y >= N ||
+      b.life <= 0
+    ){
+
+      bats.splice(i,1);
+
+    }
+
+  }
+
+  updateHUD();
+
+}
+
+
+/* -------------------------
+   HUD
+------------------------- */
 
 function updateHUD(){
- document.getElementById("score").textContent=score;
- document.getElementById("ammo").textContent=ammo;
- document.getElementById("best").textContent=best;
+
+  document.getElementById("score")
+    .textContent = score;
+
+  document.getElementById("ammo")
+    .textContent = ammo;
+
+  document.getElementById("best")
+    .textContent = best;
+
 }
+
+
+/* -------------------------
+   DRAW
+------------------------- */
 
 function draw(){
- ctx.fillStyle="#10151d";
- ctx.fillRect(0,0,600,600);
 
- ctx.fillStyle="#67e8f9";
- ctx.fillRect(food.x*CELL+7,food.y*CELL+7,16,16);
+  /*
+    Background
+  */
 
- snake.forEach((p,i)=>{
-  ctx.fillStyle=i===0?"#a7f3d0":"#34d399";
-  ctx.fillRect(p.x*CELL+2,p.y*CELL+2,26,26);
- });
+  ctx.fillStyle = "#10151d";
 
- ctx.fillStyle="#f59e0b";
- bats.forEach(b=>{
-  ctx.fillRect(b.x*CELL+5,b.y*CELL+11,20,8);
- });
+  ctx.fillRect(
+    0,
+    0,
+    600,
+    600
+  );
+
+
+  /*
+    Food
+  */
+
+  ctx.fillStyle = "#67e8f9";
+
+  ctx.fillRect(
+    food.x * CELL + 7,
+    food.y * CELL + 7,
+    16,
+    16
+  );
+
+
+  /*
+    Snake
+  */
+
+  snake.forEach(
+    (p,i) => {
+
+      ctx.fillStyle =
+        i === 0
+          ? "#a7f3d0"
+          : "#34d399";
+
+      ctx.fillRect(
+        p.x * CELL + 2,
+        p.y * CELL + 2,
+        26,
+        26
+      );
+
+    }
+  );
+
+
+  /*
+    Bats
+  */
+
+  ctx.fillStyle = "#f59e0b";
+
+  bats.forEach(
+    b => {
+
+      ctx.fillRect(
+        b.x * CELL + 5,
+        b.y * CELL + 11,
+        20,
+        8
+      );
+
+    }
+  );
+
 }
+
+
+/* -------------------------
+   GAME LOOP
+------------------------- */
 
 function loop(t){
- if(t-last>=180){
-  last=t;
-  update();
-  draw();
- }
- requestAnimationFrame(loop);
+
+  /*
+    180ms = deliberately slower
+    snake movement.
+  */
+
+  if(t - last >= 180){
+
+    last = t;
+
+    update();
+
+    draw();
+
+  }
+
+  requestAnimationFrame(loop);
+
 }
 
+
+/* -------------------------
+   START
+------------------------- */
+
 restart();
+
 requestAnimationFrame(loop);
+
 </script>
+
 </body>
 </html>
