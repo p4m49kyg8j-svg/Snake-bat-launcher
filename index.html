@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>Snake: Bat Launcher</title>
+<title>Snake</title>
 
 <style>
 html,body{
@@ -28,7 +28,7 @@ body{
 
 h1{
   margin:0 0 8px;
-  font-size:clamp(25px,7vw,42px);
+  font-size:clamp(28px,7vw,42px);
 }
 
 #hud{
@@ -43,67 +43,111 @@ h1{
   background:#181c25;
   border:1px solid #303746;
   border-radius:999px;
-  padding:7px 13px;
+  padding:8px 15px;
+  font-size:16px;
 }
 
 canvas{
   width:100%;
   aspect-ratio:1;
   background:#10151d;
-  border:2px solid #303746;
+  border:3px solid #303746;
   border-radius:16px;
   touch-action:none;
+  display:block;
 }
 
 #pad{
   display:grid;
   grid-template-columns:repeat(3,1fr);
-  gap:7px;
-  margin:10px auto;
-  max-width:330px;
+  gap:10px;
+  margin:14px auto;
+  max-width:420px;
 }
 
 button{
-  height:52px;
-  font-size:22px;
+  height:76px;
+  font-size:32px;
+  font-weight:bold;
   border:0;
-  border-radius:12px;
+  border-radius:16px;
   background:#181c25;
   color:white;
-  transition:transform .06s,background .06s;
+  transition:
+    transform .04s,
+    background .04s;
   -webkit-tap-highlight-color:transparent;
   touch-action:manipulation;
+  user-select:none;
+  -webkit-user-select:none;
 }
 
 button:active{
-  transform:scale(.94);
-  background:#252c39;
+  transform:scale(.92);
+  background:#303846;
+}
+
+#pauseButton{
+  font-size:28px;
 }
 
 #hint{
   color:#8b93a3;
-  font-size:13px;
+  font-size:14px;
+  margin-top:4px;
 }
 
 #modal{
   position:fixed;
   inset:0;
-  background:#000b;
+  background:#000c;
   display:none;
   align-items:center;
   justify-content:center;
+  z-index:10;
 }
 
 .box{
   background:#151a23;
-  padding:28px;
-  border-radius:20px;
+  padding:30px;
+  border-radius:22px;
   text-align:center;
   border:1px solid #343b48;
+  width:min(80vw,360px);
+  box-sizing:border-box;
+}
+
+.box h2{
+  margin-top:0;
+  font-size:30px;
+}
+
+.box p{
+  font-size:20px;
 }
 
 .box button{
-  padding:0 25px;
+  width:100%;
+  margin-top:10px;
+}
+
+#resumeButton{
+  background:#16803c;
+}
+
+#restartButton{
+  background:#252c39;
+}
+
+@media(max-width:500px){
+  button{
+    height:68px;
+  }
+
+  #pad{
+    gap:8px;
+    margin-top:10px;
+  }
 }
 </style>
 </head>
@@ -112,20 +156,18 @@ button:active{
 
 <div id="app">
 
-<h1>🐍 Snake: Bat Launcher</h1>
+<h1>🐍 Snake</h1>
 
 <div id="hud">
+
   <div class="pill">
     Score: <b id="score">0</b>
   </div>
 
   <div class="pill">
-    🦇 Bats: <b id="ammo">3</b>
-  </div>
-
-  <div class="pill">
     Best: <b id="best">0</b>
   </div>
+
 </div>
 
 <canvas id="game" width="600" height="600"></canvas>
@@ -133,44 +175,56 @@ button:active{
 <div id="pad">
 
   <div></div>
-  <button onclick="turn(0,-1)">▲</button>
-  <div></div>
 
-  <button onclick="turn(-1,0)">◀</button>
-
-  <button onclick="pause()">⏸</button>
-
-  <button onclick="turn(1,0)">▶</button>
+  <button id="up">▲</button>
 
   <div></div>
-  <button onclick="turn(0,1)">▼</button>
+
+  <button id="left">◀</button>
+
+  <button id="pauseButton">Ⅱ</button>
+
+  <button id="right">▶</button>
+
+  <div></div>
+
+  <button id="down">▼</button>
+
   <div></div>
 
 </div>
 
 <div id="hint">
-  Slow mode • Tap the screen twice to launch a bat
+  Use the arrows or keyboard to move
 </div>
 
 </div>
+
+
+<!-- PAUSE / GAME OVER MODAL -->
 
 <div id="modal">
 
   <div class="box">
 
-    <h2 id="message">Game Over</h2>
+    <h2 id="message">Paused</h2>
 
     <p>
       Score: <b id="final">0</b>
     </p>
 
-    <button onclick="restart()">
-      Play Again
+    <button id="resumeButton">
+      ▶ Resume
+    </button>
+
+    <button id="restartButton">
+      ↻ Restart
     </button>
 
   </div>
 
 </div>
+
 
 <script>
 
@@ -180,21 +234,49 @@ const ctx = canvas.getContext("2d");
 const N = 20;
 const CELL = 30;
 
-let snake;
-let dir;
+/* -------------------------
+   GAME STATE
+------------------------- */
+
+let snake = [];
+let dir = {x:1,y:0};
+
 let inputQueue = [];
-let food;
-let bats;
-let score;
-let ammo;
-let running;
+
+let food = null;
+
+let score = 0;
+
+let running = false;
+let paused = false;
+
 let last = 0;
+
+const SPEED = 180;
+
+
+/* -------------------------
+   BEST SCORE
+------------------------- */
 
 let best = Number(
   localStorage.getItem("snakeBest") || 0
 );
 
 document.getElementById("best").textContent = best;
+
+
+/* -------------------------
+   HAPTICS
+------------------------- */
+
+function haptic(){
+
+  if(navigator.vibrate){
+    navigator.vibrate(8);
+  }
+
+}
 
 
 /* -------------------------
@@ -215,17 +297,22 @@ function restart(){
   };
 
   inputQueue = [];
-  bats = [];
 
   score = 0;
-  ammo = 3;
-  running = true;
 
-  document.getElementById("modal").style.display = "none";
+  running = true;
+  paused = false;
 
   food = newFood();
 
+  document.getElementById("modal").style.display = "none";
+
   updateHUD();
+
+  draw();
+
+  last = performance.now();
+
 }
 
 
@@ -255,34 +342,18 @@ function newFood(){
 
 
 /* -------------------------
-   HAPTICS
-------------------------- */
-
-function haptic(){
-
-  if(navigator.vibrate){
-    navigator.vibrate(8);
-  }
-
-}
-
-
-/* -------------------------
    DIRECTION CONTROL
 ------------------------- */
 
 function turn(x,y){
 
+  if(!running || paused){
+    return;
+  }
+
   /*
-    Look at the last queued direction rather
-    than only the current direction.
-
-    This lets the player rapidly enter:
-    UP → RIGHT
-    or
-    RIGHT → DOWN
-
-    without the second input being lost.
+    Look at the most recently queued
+    direction, not just the current one.
   */
 
   const lastDir =
@@ -290,8 +361,9 @@ function turn(x,y){
       ? inputQueue[inputQueue.length - 1]
       : dir;
 
+
   /*
-    Don't allow an immediate 180° reversal.
+    Prevent a 180-degree reversal.
   */
 
   if(
@@ -301,8 +373,9 @@ function turn(x,y){
     return;
   }
 
+
   /*
-    Don't queue the exact same direction twice.
+    Don't add the exact same direction twice.
   */
 
   if(
@@ -312,11 +385,21 @@ function turn(x,y){
     return;
   }
 
+
   /*
-    Allow up to three rapid inputs.
+    Allow several rapid inputs.
+
+    Example:
+
+    UP
+    RIGHT
+    DOWN
+
+    can all be entered before the
+    next movement tick.
   */
 
-  if(inputQueue.length < 3){
+  if(inputQueue.length < 5){
 
     inputQueue.push({
       x:x,
@@ -324,9 +407,46 @@ function turn(x,y){
     });
 
     haptic();
+
   }
 
 }
+
+
+/* -------------------------
+   BUTTON INPUT
+------------------------- */
+
+function bindButton(id,x,y){
+
+  const button =
+    document.getElementById(id);
+
+  /*
+    pointerdown fires immediately when
+    the finger touches the button.
+  */
+
+  button.addEventListener(
+    "pointerdown",
+    function(e){
+
+      e.preventDefault();
+
+      turn(x,y);
+
+    }
+  );
+
+}
+
+
+/* Bind all four directions */
+
+bindButton("up",0,-1);
+bindButton("down",0,1);
+bindButton("left",-1,0);
+bindButton("right",1,0);
 
 
 /* -------------------------
@@ -335,13 +455,13 @@ function turn(x,y){
 
 function pause(){
 
-  if(!running){
+  if(!running || paused){
     return;
   }
 
   haptic();
 
-  running = false;
+  paused = true;
 
   document.getElementById("message")
     .textContent = "Paused";
@@ -349,8 +469,46 @@ function pause(){
   document.getElementById("final")
     .textContent = score;
 
+  document.getElementById("resumeButton")
+    .style.display = "block";
+
+  document.getElementById("restartButton")
+    .style.display = "block";
+
   document.getElementById("modal")
     .style.display = "flex";
+
+}
+
+
+/* -------------------------
+   RESUME
+------------------------- */
+
+function resume(){
+
+  if(!paused){
+    return;
+  }
+
+  haptic();
+
+  paused = false;
+
+  /*
+    Reset the timer here.
+
+    This is important.
+
+    Otherwise the game could immediately
+    advance when coming back from pause.
+  */
+
+  last = performance.now();
+
+  document.getElementById("modal")
+    .style.display = "none";
+
 }
 
 
@@ -361,6 +519,7 @@ function pause(){
 function gameOver(){
 
   running = false;
+  paused = false;
 
   if(score > best){
 
@@ -370,6 +529,7 @@ function gameOver(){
       "snakeBest",
       best
     );
+
   }
 
   document.getElementById("message")
@@ -378,57 +538,71 @@ function gameOver(){
   document.getElementById("final")
     .textContent = score;
 
+  document.getElementById("resumeButton")
+    .style.display = "none";
+
+  document.getElementById("restartButton")
+    .style.display = "block";
+
   document.getElementById("modal")
     .style.display = "flex";
 
   updateHUD();
+
 }
 
 
 /* -------------------------
-   BAT LAUNCHER
+   PAUSE BUTTON
 ------------------------- */
 
-function launchBat(){
+document.getElementById("pauseButton")
+  .addEventListener(
+    "pointerdown",
+    function(e){
 
-  if(!running || ammo <= 0){
-    return;
-  }
+      e.preventDefault();
 
-  ammo--;
+      pause();
 
-  haptic();
-
-  bats.push({
-
-    x:snake[0].x,
-    y:snake[0].y,
-
-    dx:dir.x,
-    dy:dir.y,
-
-    life:20
-
-  });
-
-  updateHUD();
-}
-
-
-/* -------------------------
-   DOUBLE TAP
-------------------------- */
-
-canvas.addEventListener(
-  "touchend",
-  e => {
-
-    if(e.detail === 2){
-      launchBat();
     }
+  );
 
-  }
-);
+
+/* -------------------------
+   RESUME BUTTON
+------------------------- */
+
+document.getElementById("resumeButton")
+  .addEventListener(
+    "pointerdown",
+    function(e){
+
+      e.preventDefault();
+
+      resume();
+
+    }
+  );
+
+
+/* -------------------------
+   RESTART BUTTON
+------------------------- */
+
+document.getElementById("restartButton")
+  .addEventListener(
+    "pointerdown",
+    function(e){
+
+      e.preventDefault();
+
+      haptic();
+
+      restart();
+
+    }
+  );
 
 
 /* -------------------------
@@ -437,42 +611,70 @@ canvas.addEventListener(
 
 document.addEventListener(
   "keydown",
-  e => {
+  function(e){
 
     if(
       e.key === "ArrowUp" ||
-      e.key === "w"
+      e.key === "w" ||
+      e.key === "W"
     ){
+
+      e.preventDefault();
+
       turn(0,-1);
+
     }
+
 
     if(
       e.key === "ArrowDown" ||
-      e.key === "s"
+      e.key === "s" ||
+      e.key === "S"
     ){
+
+      e.preventDefault();
+
       turn(0,1);
+
     }
+
 
     if(
       e.key === "ArrowLeft" ||
-      e.key === "a"
+      e.key === "a" ||
+      e.key === "A"
     ){
+
+      e.preventDefault();
+
       turn(-1,0);
+
     }
+
 
     if(
       e.key === "ArrowRight" ||
-      e.key === "d"
+      e.key === "d" ||
+      e.key === "D"
     ){
+
+      e.preventDefault();
+
       turn(1,0);
+
     }
 
-    if(e.key === " "){
-      launchBat();
-    }
 
-    if(e.key === "p"){
-      pause();
+    if(e.key === " " || e.key === "p"){
+
+      e.preventDefault();
+
+      if(paused){
+        resume();
+      }else{
+        pause();
+      }
+
     }
 
   }
@@ -485,20 +687,22 @@ document.addEventListener(
 
 function update(){
 
-  if(!running){
+  if(!running || paused){
     return;
   }
 
-  /*
-    Process ONE queued direction per
-    game tick.
 
-    This is what makes rapid turns reliable.
+  /*
+    Process one queued direction
+    on each movement tick.
   */
 
   if(inputQueue.length){
+
     dir = inputQueue.shift();
+
   }
+
 
   const head = {
 
@@ -508,9 +712,9 @@ function update(){
   };
 
 
-  /*
-    Wall collision
-  */
+  /* -------------------------
+     COLLISION
+  ------------------------- */
 
   if(
     head.x < 0 ||
@@ -525,17 +729,22 @@ function update(){
   ){
 
     gameOver();
+
     return;
 
   }
 
 
+  /* -------------------------
+     MOVE
+  ------------------------- */
+
   snake.unshift(head);
 
 
-  /*
-    Food
-  */
+  /* -------------------------
+     FOOD
+  ------------------------- */
 
   if(
     head.x === food.x &&
@@ -544,9 +753,9 @@ function update(){
 
     score += 10;
 
-    ammo++;
-
     food = newFood();
+
+    haptic();
 
   }else{
 
@@ -554,37 +763,6 @@ function update(){
 
   }
 
-
-  /*
-    Move bats
-  */
-
-  for(
-    let i = bats.length - 1;
-    i >= 0;
-    i--
-  ){
-
-    let b = bats[i];
-
-    b.x += b.dx;
-    b.y += b.dy;
-
-    b.life--;
-
-    if(
-      b.x < 0 ||
-      b.x >= N ||
-      b.y < 0 ||
-      b.y >= N ||
-      b.life <= 0
-    ){
-
-      bats.splice(i,1);
-
-    }
-
-  }
 
   updateHUD();
 
@@ -599,9 +777,6 @@ function updateHUD(){
 
   document.getElementById("score")
     .textContent = score;
-
-  document.getElementById("ammo")
-    .textContent = ammo;
 
   document.getElementById("best")
     .textContent = best;
@@ -636,10 +811,10 @@ function draw(){
   ctx.fillStyle = "#67e8f9";
 
   ctx.fillRect(
-    food.x * CELL + 7,
-    food.y * CELL + 7,
-    16,
-    16
+    food.x * CELL + 6,
+    food.y * CELL + 6,
+    18,
+    18
   );
 
 
@@ -648,7 +823,7 @@ function draw(){
   */
 
   snake.forEach(
-    (p,i) => {
+    function(p,i){
 
       ctx.fillStyle =
         i === 0
@@ -665,26 +840,6 @@ function draw(){
     }
   );
 
-
-  /*
-    Bats
-  */
-
-  ctx.fillStyle = "#f59e0b";
-
-  bats.forEach(
-    b => {
-
-      ctx.fillRect(
-        b.x * CELL + 5,
-        b.y * CELL + 11,
-        20,
-        8
-      );
-
-    }
-  );
-
 }
 
 
@@ -694,12 +849,11 @@ function draw(){
 
 function loop(t){
 
-  /*
-    180ms = deliberately slower
-    snake movement.
-  */
-
-  if(t - last >= 180){
+  if(
+    running &&
+    !paused &&
+    t - last >= SPEED
+  ){
 
     last = t;
 
@@ -715,7 +869,7 @@ function loop(t){
 
 
 /* -------------------------
-   START
+   START GAME
 ------------------------- */
 
 restart();
