@@ -3,14 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+
 <title>Snake</title>
 
 <style>
-html,body{
+
+html,
+body{
   margin:0;
-  background:#090b10;
+  background:#070a0f;
   color:white;
-  font-family:system-ui,sans-serif;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   height:100%;
   overflow:hidden;
 }
@@ -29,6 +32,8 @@ body{
 h1{
   margin:0 0 8px;
   font-size:clamp(28px,7vw,42px);
+  font-weight:800;
+  letter-spacing:-1px;
 }
 
 #hud{
@@ -40,51 +45,107 @@ h1{
 }
 
 .pill{
-  background:#181c25;
-  border:1px solid #303746;
+  background:linear-gradient(
+    180deg,
+    #1c222d,
+    #121720
+  );
+
+  border:1px solid #303947;
+
   border-radius:999px;
+
   padding:8px 15px;
+
   font-size:16px;
+
+  box-shadow:
+    0 3px 12px #0008,
+    inset 0 1px 0 #ffffff12;
 }
 
 canvas{
   width:100%;
   aspect-ratio:1;
-  background:#10151d;
-  border:3px solid #303746;
-  border-radius:16px;
+
+  background:#0b1017;
+
+  border:3px solid #303947;
+
+  border-radius:18px;
+
   touch-action:none;
+
   display:block;
+
+  box-shadow:
+    0 12px 35px #000a,
+    inset 0 0 30px #0008;
 }
 
 #pad{
   display:grid;
+
   grid-template-columns:repeat(3,1fr);
+
   gap:10px;
+
   margin:14px auto;
+
   max-width:420px;
 }
 
 button{
   height:76px;
+
   font-size:32px;
+
   font-weight:bold;
+
   border:0;
+
   border-radius:16px;
-  background:#181c25;
+
+  background:
+    linear-gradient(
+      180deg,
+      #202632,
+      #151a23
+    );
+
   color:white;
+
+  box-shadow:
+    0 5px 12px #0008,
+    inset 0 1px 0 #ffffff10;
+
   transition:
     transform .04s,
-    background .04s;
+    background .04s,
+    box-shadow .04s;
+
   -webkit-tap-highlight-color:transparent;
+
   touch-action:manipulation;
+
   user-select:none;
+
   -webkit-user-select:none;
 }
 
 button:active{
   transform:scale(.92);
-  background:#303846;
+
+  background:
+    linear-gradient(
+      180deg,
+      #343c4b,
+      #222936
+    );
+
+  box-shadow:
+    0 2px 5px #0008,
+    inset 0 1px 0 #ffffff15;
 }
 
 #pauseButton{
@@ -93,32 +154,58 @@ button:active{
 
 #hint{
   color:#8b93a3;
+
   font-size:14px;
+
   margin-top:4px;
 }
 
 #modal{
   position:fixed;
+
   inset:0;
+
   background:#000c;
+
   display:none;
+
   align-items:center;
+
   justify-content:center;
+
   z-index:10;
+
+  backdrop-filter:blur(5px);
 }
 
 .box{
-  background:#151a23;
+  background:
+    linear-gradient(
+      180deg,
+      #1a202b,
+      #11161e
+    );
+
   padding:30px;
-  border-radius:22px;
+
+  border-radius:24px;
+
   text-align:center;
-  border:1px solid #343b48;
+
+  border:1px solid #3b4453;
+
   width:min(80vw,360px);
+
   box-sizing:border-box;
+
+  box-shadow:
+    0 20px 60px #000c,
+    inset 0 1px 0 #ffffff10;
 }
 
 .box h2{
   margin-top:0;
+
   font-size:30px;
 }
 
@@ -128,35 +215,52 @@ button:active{
 
 .box button{
   width:100%;
+
   margin-top:10px;
 }
 
 #resumeButton{
-  background:#16803c;
+  background:
+    linear-gradient(
+      180deg,
+      #1b9b4e,
+      #14763b
+    );
 }
 
 #restartButton{
-  background:#252c39;
+  background:
+    linear-gradient(
+      180deg,
+      #303846,
+      #202631
+    );
 }
 
 @media(max-width:500px){
+
   button{
     height:68px;
   }
 
   #pad{
     gap:8px;
+
     margin-top:10px;
   }
+
 }
+
 </style>
 </head>
+
 
 <body>
 
 <div id="app">
 
 <h1>🐍 Snake</h1>
+
 
 <div id="hud">
 
@@ -170,29 +274,48 @@ button:active{
 
 </div>
 
-<canvas id="game" width="600" height="600"></canvas>
+
+<canvas
+  id="game"
+  width="2400"
+  height="2400">
+</canvas>
+
 
 <div id="pad">
 
   <div></div>
 
-  <button id="up">▲</button>
+  <button id="up">
+    ▲
+  </button>
 
   <div></div>
 
-  <button id="left">◀</button>
 
-  <button id="pauseButton">Ⅱ</button>
+  <button id="left">
+    ◀
+  </button>
 
-  <button id="right">▶</button>
+  <button id="pauseButton">
+    Ⅱ
+  </button>
+
+  <button id="right">
+    ▶
+  </button>
+
 
   <div></div>
 
-  <button id="down">▼</button>
+  <button id="down">
+    ▼
+  </button>
 
   <div></div>
 
 </div>
+
 
 <div id="hint">
   Use the arrows or keyboard to move
@@ -201,16 +324,20 @@ button:active{
 </div>
 
 
-<!-- PAUSE / GAME OVER MODAL -->
+
+<!-- PAUSE / GAME OVER -->
 
 <div id="modal">
 
   <div class="box">
 
-    <h2 id="message">Paused</h2>
+    <h2 id="message">
+      Paused
+    </h2>
 
     <p>
-      Score: <b id="final">0</b>
+      Score:
+      <b id="final">0</b>
     </p>
 
     <button id="resumeButton">
@@ -226,20 +353,51 @@ button:active{
 </div>
 
 
+
 <script>
 
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+
+/* =========================================================
+   GAME SETUP
+========================================================= */
+
+
+const canvas =
+  document.getElementById("game");
+
+const ctx =
+  canvas.getContext("2d");
+
+
+/*
+  IMPORTANT:
+
+  The gameplay is STILL 20 × 20.
+
+  We simply render that grid at
+  2400 × 2400 for much higher visual
+  resolution.
+*/
 
 const N = 20;
-const CELL = 30;
 
-/* -------------------------
+const RENDER_SIZE = 2400;
+
+const CELL =
+  RENDER_SIZE / N;
+
+
+/* =========================================================
    GAME STATE
-------------------------- */
+========================================================= */
+
 
 let snake = [];
-let dir = {x:1,y:0};
+
+let dir = {
+  x:1,
+  y:0
+};
 
 let inputQueue = [];
 
@@ -248,6 +406,7 @@ let food = null;
 let score = 0;
 
 let running = false;
+
 let paused = false;
 
 let last = 0;
@@ -255,156 +414,226 @@ let last = 0;
 const SPEED = 180;
 
 
-/* -------------------------
-   BEST SCORE
-------------------------- */
-
-let best = Number(
-  localStorage.getItem("snakeBest") || 0
-);
-
-document.getElementById("best").textContent = best;
+/* =========================================================
+   HIGH SCORE
+========================================================= */
 
 
-/* -------------------------
+let best =
+  Number(
+    localStorage.getItem("snakeBest") || 0
+  );
+
+
+document.getElementById("best")
+  .textContent = best;
+
+
+/* =========================================================
    HAPTICS
-------------------------- */
+========================================================= */
+
 
 function haptic(){
 
-  if(navigator.vibrate){
+  /*
+    Works on browsers/devices that expose
+    navigator.vibrate.
+
+    iOS Safari may ignore this API.
+  */
+
+  if(
+    navigator.vibrate
+  ){
+
     navigator.vibrate(8);
+
   }
 
 }
 
 
-/* -------------------------
+/* =========================================================
    START / RESTART
-------------------------- */
+========================================================= */
+
 
 function restart(){
 
   snake = [
+
     {x:10,y:10},
+
     {x:9,y:10},
+
     {x:8,y:10}
+
   ];
+
 
   dir = {
     x:1,
     y:0
   };
 
+
   inputQueue = [];
+
 
   score = 0;
 
+
   running = true;
+
   paused = false;
+
 
   food = newFood();
 
-  document.getElementById("modal").style.display = "none";
+
+  document.getElementById("modal")
+    .style.display = "none";
+
 
   updateHUD();
 
+
   draw();
+
 
   last = performance.now();
 
 }
 
 
-/* -------------------------
+/* =========================================================
    FOOD
-------------------------- */
+========================================================= */
+
 
 function newFood(){
 
   let f;
 
+
   do{
 
     f = {
-      x:Math.floor(Math.random()*N),
-      y:Math.floor(Math.random()*N)
+
+      x:
+        Math.floor(
+          Math.random() * N
+        ),
+
+      y:
+        Math.floor(
+          Math.random() * N
+        )
+
     };
 
   }while(
+
     snake.some(
-      p => p.x === f.x && p.y === f.y
+
+      p =>
+        p.x === f.x &&
+        p.y === f.y
+
     )
+
   );
 
+
   return f;
+
 }
 
 
-/* -------------------------
+/* =========================================================
    DIRECTION CONTROL
-------------------------- */
+========================================================= */
+
 
 function turn(x,y){
 
-  if(!running || paused){
+  if(
+    !running ||
+    paused
+  ){
+
     return;
+
   }
 
+
   /*
-    Look at the most recently queued
-    direction, not just the current one.
+    Compare against the newest queued
+    direction so extremely fast turns
+    aren't lost.
   */
 
   const lastDir =
+
     inputQueue.length
-      ? inputQueue[inputQueue.length - 1]
+
+      ? inputQueue[
+          inputQueue.length - 1
+        ]
+
       : dir;
 
 
   /*
-    Prevent a 180-degree reversal.
+    Prevent immediate 180-degree
+    reversals.
   */
 
   if(
+
     x === -lastDir.x &&
     y === -lastDir.y
+
   ){
+
     return;
+
   }
 
 
   /*
-    Don't add the exact same direction twice.
+    Don't queue duplicates.
   */
 
   if(
+
     x === lastDir.x &&
     y === lastDir.y
+
   ){
+
     return;
+
   }
 
 
   /*
-    Allow several rapid inputs.
-
-    Example:
-
-    UP
-    RIGHT
-    DOWN
-
-    can all be entered before the
-    next movement tick.
+    Five rapid commands can be
+    buffered.
   */
 
-  if(inputQueue.length < 5){
+  if(
+    inputQueue.length < 5
+  ){
 
     inputQueue.push({
+
       x:x,
       y:y
+
     });
+
 
     haptic();
 
@@ -413,22 +642,32 @@ function turn(x,y){
 }
 
 
-/* -------------------------
+/* =========================================================
    BUTTON INPUT
-------------------------- */
+========================================================= */
 
-function bindButton(id,x,y){
+
+function bindButton(
+  id,
+  x,
+  y
+){
 
   const button =
     document.getElementById(id);
 
+
   /*
-    pointerdown fires immediately when
-    the finger touches the button.
+    pointerdown responds at the
+    moment the finger touches the
+    control rather than waiting for
+    the click event.
   */
 
   button.addEventListener(
+
     "pointerdown",
+
     function(e){
 
       e.preventDefault();
@@ -436,44 +675,78 @@ function bindButton(id,x,y){
       turn(x,y);
 
     }
+
   );
 
 }
 
 
-/* Bind all four directions */
+bindButton(
+  "up",
+  0,
+  -1
+);
 
-bindButton("up",0,-1);
-bindButton("down",0,1);
-bindButton("left",-1,0);
-bindButton("right",1,0);
+
+bindButton(
+  "down",
+  0,
+  1
+);
 
 
-/* -------------------------
+bindButton(
+  "left",
+  -1,
+  0
+);
+
+
+bindButton(
+  "right",
+  1,
+  0
+);
+
+
+/* =========================================================
    PAUSE
-------------------------- */
+========================================================= */
+
 
 function pause(){
 
-  if(!running || paused){
+  if(
+    !running ||
+    paused
+  ){
+
     return;
+
   }
+
 
   haptic();
 
+
   paused = true;
+
 
   document.getElementById("message")
     .textContent = "Paused";
 
+
   document.getElementById("final")
     .textContent = score;
+
 
   document.getElementById("resumeButton")
     .style.display = "block";
 
+
   document.getElementById("restartButton")
     .style.display = "block";
+
 
   document.getElementById("modal")
     .style.display = "flex";
@@ -481,30 +754,33 @@ function pause(){
 }
 
 
-/* -------------------------
+/* =========================================================
    RESUME
-------------------------- */
+========================================================= */
+
 
 function resume(){
 
   if(!paused){
+
     return;
+
   }
+
 
   haptic();
 
+
   paused = false;
 
+
   /*
-    Reset the timer here.
-
-    This is important.
-
-    Otherwise the game could immediately
-    advance when coming back from pause.
+    Reset timing so resuming doesn't
+    cause an immediate catch-up move.
   */
 
   last = performance.now();
+
 
   document.getElementById("modal")
     .style.display = "none";
@@ -512,18 +788,22 @@ function resume(){
 }
 
 
-/* -------------------------
+/* =========================================================
    GAME OVER
-------------------------- */
+========================================================= */
+
 
 function gameOver(){
 
   running = false;
+
   paused = false;
+
 
   if(score > best){
 
     best = score;
+
 
     localStorage.setItem(
       "snakeBest",
@@ -532,33 +812,43 @@ function gameOver(){
 
   }
 
+
   document.getElementById("message")
     .textContent = "Game Over";
+
 
   document.getElementById("final")
     .textContent = score;
 
+
   document.getElementById("resumeButton")
     .style.display = "none";
+
 
   document.getElementById("restartButton")
     .style.display = "block";
 
+
   document.getElementById("modal")
     .style.display = "flex";
+
 
   updateHUD();
 
 }
 
 
-/* -------------------------
+/* =========================================================
    PAUSE BUTTON
-------------------------- */
+========================================================= */
 
-document.getElementById("pauseButton")
+
+document
+  .getElementById("pauseButton")
   .addEventListener(
+
     "pointerdown",
+
     function(e){
 
       e.preventDefault();
@@ -566,16 +856,21 @@ document.getElementById("pauseButton")
       pause();
 
     }
+
   );
 
 
-/* -------------------------
+/* =========================================================
    RESUME BUTTON
-------------------------- */
+========================================================= */
 
-document.getElementById("resumeButton")
+
+document
+  .getElementById("resumeButton")
   .addEventListener(
+
     "pointerdown",
+
     function(e){
 
       e.preventDefault();
@@ -583,16 +878,21 @@ document.getElementById("resumeButton")
       resume();
 
     }
+
   );
 
 
-/* -------------------------
+/* =========================================================
    RESTART BUTTON
-------------------------- */
+========================================================= */
 
-document.getElementById("restartButton")
+
+document
+  .getElementById("restartButton")
   .addEventListener(
+
     "pointerdown",
+
     function(e){
 
       e.preventDefault();
@@ -602,21 +902,28 @@ document.getElementById("restartButton")
       restart();
 
     }
+
   );
 
 
-/* -------------------------
+/* =========================================================
    KEYBOARD
-------------------------- */
+========================================================= */
+
 
 document.addEventListener(
+
   "keydown",
+
   function(e){
 
+
     if(
+
       e.key === "ArrowUp" ||
       e.key === "w" ||
       e.key === "W"
+
     ){
 
       e.preventDefault();
@@ -627,9 +934,11 @@ document.addEventListener(
 
 
     if(
+
       e.key === "ArrowDown" ||
       e.key === "s" ||
       e.key === "S"
+
     ){
 
       e.preventDefault();
@@ -640,9 +949,11 @@ document.addEventListener(
 
 
     if(
+
       e.key === "ArrowLeft" ||
       e.key === "a" ||
       e.key === "A"
+
     ){
 
       e.preventDefault();
@@ -653,9 +964,11 @@ document.addEventListener(
 
 
     if(
+
       e.key === "ArrowRight" ||
       e.key === "d" ||
       e.key === "D"
+
     ){
 
       e.preventDefault();
@@ -665,67 +978,100 @@ document.addEventListener(
     }
 
 
-    if(e.key === " " || e.key === "p"){
+    if(
+
+      e.key === " " ||
+      e.key === "p"
+
+    ){
 
       e.preventDefault();
 
+
       if(paused){
+
         resume();
+
       }else{
+
         pause();
+
       }
 
     }
 
   }
+
 );
 
 
-/* -------------------------
+/* =========================================================
    GAME UPDATE
-------------------------- */
+========================================================= */
+
 
 function update(){
 
-  if(!running || paused){
+  if(
+    !running ||
+    paused
+  ){
+
     return;
+
   }
 
 
   /*
-    Process one queued direction
-    on each movement tick.
+    Process one queued turn.
   */
 
-  if(inputQueue.length){
+  if(
+    inputQueue.length
+  ){
 
-    dir = inputQueue.shift();
+    dir =
+      inputQueue.shift();
 
   }
 
 
   const head = {
 
-    x:snake[0].x + dir.x,
-    y:snake[0].y + dir.y
+    x:
+      snake[0].x +
+      dir.x,
+
+    y:
+      snake[0].y +
+      dir.y
 
   };
 
 
-  /* -------------------------
-     COLLISION
-  ------------------------- */
+  /*
+    WALL / SELF COLLISION
+  */
 
   if(
+
     head.x < 0 ||
+
     head.x >= N ||
+
     head.y < 0 ||
+
     head.y >= N ||
+
     snake.some(
+
       p =>
+
         p.x === head.x &&
         p.y === head.y
+
     )
+
   ){
 
     gameOver();
@@ -735,25 +1081,29 @@ function update(){
   }
 
 
-  /* -------------------------
-     MOVE
-  ------------------------- */
+  /*
+    Move snake.
+  */
 
   snake.unshift(head);
 
 
-  /* -------------------------
-     FOOD
-  ------------------------- */
+  /*
+    Food.
+  */
 
   if(
+
     head.x === food.x &&
     head.y === food.y
+
   ){
 
     score += 10;
 
+
     food = newFood();
+
 
     haptic();
 
@@ -769,14 +1119,16 @@ function update(){
 }
 
 
-/* -------------------------
+/* =========================================================
    HUD
-------------------------- */
+========================================================= */
+
 
 function updateHUD(){
 
   document.getElementById("score")
     .textContent = score;
+
 
   document.getElementById("best")
     .textContent = best;
@@ -784,97 +1136,832 @@ function updateHUD(){
 }
 
 
-/* -------------------------
-   DRAW
-------------------------- */
+/* =========================================================
+   DRAWING HELPERS
+========================================================= */
 
-function draw(){
 
-  /*
-    Background
-  */
+/*
+  Rounded rectangle helper.
+*/
 
-  ctx.fillStyle = "#10151d";
+function roundedRect(
+  x,
+  y,
+  w,
+  h,
+  r
+){
 
-  ctx.fillRect(
-    0,
-    0,
-    600,
-    600
+  const radius =
+    Math.min(
+      r,
+      w / 2,
+      h / 2
+    );
+
+
+  ctx.beginPath();
+
+
+  ctx.moveTo(
+    x + radius,
+    y
   );
 
 
-  /*
-    Food
-  */
-
-  ctx.fillStyle = "#67e8f9";
-
-  ctx.fillRect(
-    food.x * CELL + 6,
-    food.y * CELL + 6,
-    18,
-    18
+  ctx.lineTo(
+    x + w - radius,
+    y
   );
 
 
-  /*
-    Snake
-  */
-
-  snake.forEach(
-    function(p,i){
-
-      ctx.fillStyle =
-        i === 0
-          ? "#a7f3d0"
-          : "#34d399";
-
-      ctx.fillRect(
-        p.x * CELL + 2,
-        p.y * CELL + 2,
-        26,
-        26
-      );
-
-    }
+  ctx.quadraticCurveTo(
+    x + w,
+    y,
+    x + w,
+    y + radius
   );
+
+
+  ctx.lineTo(
+    x + w,
+    y + h - radius
+  );
+
+
+  ctx.quadraticCurveTo(
+    x + w,
+    y + h,
+    x + w - radius,
+    y + h
+  );
+
+
+  ctx.lineTo(
+    x + radius,
+    y + h
+  );
+
+
+  ctx.quadraticCurveTo(
+    x,
+    y + h,
+    x,
+    y + h - radius
+  );
+
+
+  ctx.lineTo(
+    x,
+    y + radius
+  );
+
+
+  ctx.quadraticCurveTo(
+    x,
+    y,
+    x + radius,
+    y
+  );
+
+
+  ctx.closePath();
 
 }
 
 
-/* -------------------------
+/* =========================================================
+   BOARD BACKGROUND
+========================================================= */
+
+
+function drawBoard(){
+
+  /*
+    Deep background gradient.
+  */
+
+  const bg =
+    ctx.createRadialGradient(
+
+      RENDER_SIZE / 2,
+      RENDER_SIZE / 2,
+      100,
+
+      RENDER_SIZE / 2,
+      RENDER_SIZE / 2,
+      RENDER_SIZE * 0.75
+
+    );
+
+
+  bg.addColorStop(
+    0,
+    "#111a24"
+  );
+
+
+  bg.addColorStop(
+    1,
+    "#070b11"
+  );
+
+
+  ctx.fillStyle = bg;
+
+
+  ctx.fillRect(
+    0,
+    0,
+    RENDER_SIZE,
+    RENDER_SIZE
+  );
+
+
+  /*
+    Subtle grid.
+  */
+
+  ctx.save();
+
+
+  ctx.strokeStyle =
+    "rgba(255,255,255,0.035)";
+
+
+  ctx.lineWidth = 2;
+
+
+  for(
+    let i = 0;
+    i <= N;
+    i++
+  ){
+
+    const p =
+      i * CELL;
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      p,
+      0
+    );
+
+    ctx.lineTo(
+      p,
+      RENDER_SIZE
+    );
+
+    ctx.stroke();
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      0,
+      p
+    );
+
+    ctx.lineTo(
+      RENDER_SIZE,
+      p
+    );
+
+    ctx.stroke();
+
+  }
+
+
+  ctx.restore();
+
+}
+
+
+/* =========================================================
+   DRAW FOOD
+========================================================= */
+
+
+function drawFood(){
+
+  const cx =
+    food.x * CELL +
+    CELL / 2;
+
+  const cy =
+    food.y * CELL +
+    CELL / 2;
+
+
+  /*
+    Glow.
+  */
+
+  const glow =
+    ctx.createRadialGradient(
+
+      cx,
+      cy,
+      5,
+
+      cx,
+      cy,
+      CELL * 0.65
+
+    );
+
+
+  glow.addColorStop(
+    0,
+    "rgba(103,232,249,0.45)"
+  );
+
+
+  glow.addColorStop(
+    1,
+    "rgba(103,232,249,0)"
+  );
+
+
+  ctx.fillStyle = glow;
+
+
+  ctx.fillRect(
+
+    cx - CELL,
+    cy - CELL,
+    CELL * 2,
+    CELL * 2
+
+  );
+
+
+  /*
+    Outer food body.
+  */
+
+  const r =
+    CELL * 0.27;
+
+
+  const foodGradient =
+    ctx.createRadialGradient(
+
+      cx - CELL * 0.12,
+      cy - CELL * 0.14,
+      3,
+
+      cx,
+      cy,
+      r * 1.4
+
+    );
+
+
+  foodGradient.addColorStop(
+    0,
+    "#e8fcff"
+  );
+
+
+  foodGradient.addColorStop(
+    0.22,
+    "#8ff3ff"
+  );
+
+
+  foodGradient.addColorStop(
+    0.62,
+    "#26cfe6"
+  );
+
+
+  foodGradient.addColorStop(
+    1,
+    "#087f9b"
+  );
+
+
+  ctx.fillStyle =
+    foodGradient;
+
+
+  ctx.beginPath();
+
+
+  ctx.arc(
+    cx,
+    cy,
+    r,
+    0,
+    Math.PI * 2
+  );
+
+
+  ctx.fill();
+
+
+  /*
+    Food highlight.
+  */
+
+  ctx.fillStyle =
+    "rgba(255,255,255,0.75)";
+
+
+  ctx.beginPath();
+
+
+  ctx.arc(
+
+    cx - CELL * 0.10,
+
+    cy - CELL * 0.11,
+
+    CELL * 0.075,
+
+    0,
+
+    Math.PI * 2
+
+  );
+
+
+  ctx.fill();
+
+}
+
+
+/* =========================================================
+   DRAW SNAKE BODY
+========================================================= */
+
+
+function drawSnake(){
+
+  /*
+    Draw from tail toward head so
+    the head sits cleanly on top.
+  */
+
+  for(
+    let i = snake.length - 1;
+    i >= 0;
+    i--
+  ){
+
+    const p =
+      snake[i];
+
+
+    const x =
+      p.x * CELL;
+
+
+    const y =
+      p.y * CELL;
+
+
+    const margin =
+      CELL * 0.055;
+
+
+    const size =
+      CELL - margin * 2;
+
+
+    const radius =
+      CELL * 0.20;
+
+
+    /*
+      Tail is slightly smaller.
+    */
+
+    const taper =
+      i === snake.length - 1
+        ? 0.82
+        : 1;
+
+
+    const drawSize =
+      size * taper;
+
+
+    const offset =
+      (size - drawSize) / 2;
+
+
+    /*
+      Shadow.
+    */
+
+    ctx.save();
+
+
+    ctx.shadowColor =
+      "rgba(0,0,0,0.45)";
+
+
+    ctx.shadowBlur =
+      CELL * 0.12;
+
+
+    ctx.shadowOffsetY =
+      CELL * 0.06;
+
+
+    /*
+      Body gradient.
+    */
+
+    const gradient =
+      ctx.createLinearGradient(
+
+        x,
+        y,
+
+        x + CELL,
+        y + CELL
+
+      );
+
+
+    if(i === 0){
+
+      gradient.addColorStop(
+        0,
+        "#d8ffe9"
+      );
+
+      gradient.addColorStop(
+        0.28,
+        "#8ff5c5"
+      );
+
+      gradient.addColorStop(
+        0.7,
+        "#35d98c"
+      );
+
+      gradient.addColorStop(
+        1,
+        "#15945d"
+      );
+
+    }else{
+
+      gradient.addColorStop(
+        0,
+        "#74efb0"
+      );
+
+      gradient.addColorStop(
+        0.35,
+        "#35d98c"
+      );
+
+      gradient.addColorStop(
+        0.75,
+        "#1fb873"
+      );
+
+      gradient.addColorStop(
+        1,
+        "#087a4a"
+      );
+
+    }
+
+
+    ctx.fillStyle =
+      gradient;
+
+
+    roundedRect(
+
+      x + margin + offset,
+
+      y + margin + offset,
+
+      drawSize,
+
+      drawSize,
+
+      radius
+
+    );
+
+
+    ctx.fill();
+
+
+    ctx.restore();
+
+
+    /*
+      Small top highlight.
+    */
+
+    if(i !== 0){
+
+      ctx.fillStyle =
+        "rgba(255,255,255,0.10)";
+
+
+      roundedRect(
+
+        x + CELL * 0.13,
+
+        y + CELL * 0.10,
+
+        CELL * 0.55,
+
+        CELL * 0.12,
+
+        CELL * 0.06
+
+      );
+
+
+      ctx.fill();
+
+    }
+
+  }
+
+}
+
+
+/* =========================================================
+   DRAW SNAKE HEAD
+========================================================= */
+
+
+function drawHead(){
+
+  const p =
+    snake[0];
+
+
+  if(!p){
+    return;
+  }
+
+
+  const x =
+    p.x * CELL;
+
+
+  const y =
+    p.y * CELL;
+
+
+  const cx =
+    x + CELL / 2;
+
+
+  const cy =
+    y + CELL / 2;
+
+
+  /*
+    Direction vector.
+  */
+
+  const dx =
+    dir.x;
+
+
+  const dy =
+    dir.y;
+
+
+  /*
+    Eyes are positioned toward the
+    front of the head.
+  */
+
+  const forwardX =
+    dx * CELL * 0.18;
+
+
+  const forwardY =
+    dy * CELL * 0.18;
+
+
+  const sideX =
+    -dy * CELL * 0.16;
+
+
+  const sideY =
+    dx * CELL * 0.16;
+
+
+  const eyeRadius =
+    CELL * 0.095;
+
+
+  const eye1X =
+    cx +
+    forwardX +
+    sideX;
+
+
+  const eye1Y =
+    cy +
+    forwardY +
+    sideY;
+
+
+  const eye2X =
+    cx +
+    forwardX -
+    sideX;
+
+
+  const eye2Y =
+    cy +
+    forwardY -
+    sideY;
+
+
+  /*
+    White eyes.
+  */
+
+  ctx.fillStyle =
+    "#f8fffb";
+
+
+  ctx.beginPath();
+
+  ctx.arc(
+    eye1X,
+    eye1Y,
+    eyeRadius,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fill();
+
+
+  ctx.beginPath();
+
+  ctx.arc(
+    eye2X,
+    eye2Y,
+    eyeRadius,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fill();
+
+
+  /*
+    Pupils.
+  */
+
+  const pupilOffset =
+    CELL * 0.035;
+
+
+  ctx.fillStyle =
+    "#06100b";
+
+
+  ctx.beginPath();
+
+  ctx.arc(
+
+    eye1X +
+      dx * pupilOffset,
+
+    eye1Y +
+      dy * pupilOffset,
+
+    eyeRadius * 0.48,
+
+    0,
+    Math.PI * 2
+
+  );
+
+  ctx.fill();
+
+
+  ctx.beginPath();
+
+  ctx.arc(
+
+    eye2X +
+      dx * pupilOffset,
+
+    eye2Y +
+      dy * pupilOffset,
+
+    eyeRadius * 0.48,
+
+    0,
+    Math.PI * 2
+
+  );
+
+  ctx.fill();
+
+}
+
+
+/* =========================================================
+   COMPLETE DRAW
+========================================================= */
+
+
+function draw(){
+
+  /*
+    Reset transforms in case anything
+    changed the canvas state.
+  */
+
+  ctx.setTransform(
+    1,
+    0,
+    0,
+    1,
+    0,
+    0
+  );
+
+
+  ctx.clearRect(
+    0,
+    0,
+    RENDER_SIZE,
+    RENDER_SIZE
+  );
+
+
+  drawBoard();
+
+
+  drawFood();
+
+
+  drawSnake();
+
+
+  drawHead();
+
+}
+
+
+/* =========================================================
    GAME LOOP
-------------------------- */
+========================================================= */
+
 
 function loop(t){
 
   if(
+
     running &&
     !paused &&
     t - last >= SPEED
+
   ){
 
     last = t;
 
+
     update();
+
 
     draw();
 
   }
+
 
   requestAnimationFrame(loop);
 
 }
 
 
-/* -------------------------
-   START GAME
-------------------------- */
+/* =========================================================
+   START
+========================================================= */
+
 
 restart();
 
+
 requestAnimationFrame(loop);
+
 
 </script>
 
